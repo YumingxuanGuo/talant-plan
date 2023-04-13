@@ -329,6 +329,6 @@ impl RaftService for Node {
     // CAVEATS: Please avoid locking or sleeping here, it may jam the network.
     async fn request_vote(&self, args: RequestVoteArgs) -> labrpc::Result<RequestVoteReply> {
         // Your code here (2A, 2B).
-        crate::your_code_here(args)
+        crate::your_code_here(args);
     }
 }

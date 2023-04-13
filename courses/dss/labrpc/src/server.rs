@@ -38,8 +38,7 @@ impl ServerBuilder {
     ) -> Result<()> {
         match self.services.entry(service_name) {
             Entry::Occupied(_) => Err(Error::Other(format!(
-                "{} has already registered",
-                service_name
+                "{service_name} has already registered"
             ))),
             Entry::Vacant(entry) => {
                 entry.insert(factory);
@@ -89,8 +88,7 @@ impl Server {
             Some(n) => n,
             None => {
                 return Box::pin(future::err(Error::Unimplemented(format!(
-                    "unknown {}",
-                    fq_name
+                    "unknown {fq_name}"
                 ))));
             }
         };
@@ -98,8 +96,7 @@ impl Server {
             Some(n) => n,
             None => {
                 return Box::pin(future::err(Error::Unimplemented(format!(
-                    "unknown {}",
-                    fq_name
+                    "unknown {fq_name}"
                 ))));
             }
         };
@@ -108,8 +105,7 @@ impl Server {
             handle(req)
         } else {
             Box::pin(future::err(Error::Unimplemented(format!(
-                "unknown {}",
-                fq_name
+                "unknown {fq_name}"
             ))))
         }
     }

@@ -213,11 +213,11 @@ impl Network {
                 }
 
                 let drop_reply = !reliable && thread_rng().gen::<u64>() % 1000 < 100;
-                let long_reordering = if long_reordering && thread_rng().gen_range(0, 900) < 600i32
+                let long_reordering = if long_reordering && thread_rng().gen_range(0..900) < 600i32
                 {
                     // delay the response for a while
-                    let upper_bound: u64 = 1 + thread_rng().gen_range(0, 2000);
-                    Some(200 + thread_rng().gen_range(0, upper_bound))
+                    let upper_bound: u64 = 1 + thread_rng().gen_range(0..2000);
+                    Some(200 + thread_rng().gen_range(0..upper_bound))
                 } else {
                     None
                 };

@@ -66,14 +66,14 @@ fn init(num_clinet: usize) -> (Network, Vec<Client>, Arc<CommitHooks>) {
         fail_primary: AtomicBool::new(false),
     });
     for i in 0..num_clinet {
-        let txn_name_string = format!("txn{}", i);
+        let txn_name_string = format!("txn{i}");
         let txn_name = txn_name_string.as_str();
         let cli = rn.create_client(txn_name.to_owned());
         cli.set_hooks(hook.clone());
         let txn_client = TransactionClient::new(cli);
         rn.enable(txn_name, true);
         rn.connect(txn_name, server_name);
-        let tso_name_string = format!("tso{}", i);
+        let tso_name_string = format!("tso{i}");
         let tso_name = tso_name_string.as_str();
         let cli = rn.create_client(tso_name.to_owned());
         let tso_client = TSOClient::new(cli);
@@ -92,7 +92,7 @@ fn test_get_timestamp_under_unreliable_network() {
 
     for (i, _) in clients.iter().enumerate() {
         let client = clients[i].to_owned();
-        let tso_name_string = format!("tso{}", i);
+        let tso_name_string = format!("tso{i}");
         rn.enable(tso_name_string.as_str(), false);
         children.push(thread::spawn(move || {
             let res = client.get_timestamp();

@@ -137,7 +137,7 @@ impl Config {
     }
 
     pub fn rpc_count(&self, server: usize) -> usize {
-        self.net.count(&format!("{}", server))
+        self.net.count(&format!("{server}"))
     }
 
     fn rpc_total(&self) -> usize {
@@ -392,7 +392,7 @@ impl Config {
             let cli = self.net.create_client(name.to_string());
             let client = RaftClient::new(cli);
             clients.push(client);
-            self.net.connect(name, &format!("{}", j));
+            self.net.connect(name, &format!("{j}"));
         }
 
         let (tx, apply_ch) = unbounded();
@@ -455,7 +455,7 @@ impl Config {
         });
         self.net.spawn_poller(apply);
 
-        let mut builder = labrpc::ServerBuilder::new(format!("{}", i));
+        let mut builder = labrpc::ServerBuilder::new(format!("{i}"));
         raft::add_raft_service(node, &mut builder).unwrap();
         let srv = builder.build();
         self.net.add_server(srv);
@@ -465,7 +465,7 @@ impl Config {
     pub fn crash1(&mut self, i: usize) {
         self.disconnect(i);
         // disable client connections to the server.
-        self.net.delete_server(&format!("{}", i));
+        self.net.delete_server(&format!("{i}"));
 
         // a fresh persister, in case old instance
         // continues to update the Persister.

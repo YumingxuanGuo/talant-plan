@@ -91,16 +91,16 @@ fn next_value(prev: String, val: &str) -> String {
 fn check_clnt_appends(clnt: usize, v: String, count: usize) {
     let mut lastoff = None;
     for j in 0..count {
-        let wanted = format!("x {} {} y", clnt, j);
+        let wanted = format!("x {clnt} {j} y");
         if let Some(off) = v.find(&wanted) {
             let off1 = v.rfind(&wanted).unwrap();
-            assert_eq!(off1, off, "duplicate element {:?} in Append result", wanted);
+            assert_eq!(off1, off, "duplicate element {wanted:?} in Append result");
 
             if let Some(lastoff) = lastoff {
                 assert!(
                     off > lastoff,
-                    "wrong order for element {:?} in Append result",
-                    wanted
+                    "{}",
+                    "wrong order for element {wanted:?} in Append result",
                 );
             }
             lastoff = Some(off);
@@ -121,16 +121,16 @@ fn check_concurrent_appends(v: String, counts: &[usize]) {
     for i in 0..nclients {
         let mut lastoff = None;
         for j in 0..counts[i] {
-            let wanted = format!("x {} {} y", i, j);
+            let wanted = format!("x {i} {j} y");
             if let Some(off) = v.find(&wanted) {
                 let off1 = v.rfind(&wanted).unwrap();
-                assert_eq!(off1, off, "duplicate element {:?} in Append result", wanted);
+                assert_eq!(off1, off, "duplicate element {wanted:?} in Append result");
 
                 if let Some(lastoff) = lastoff {
                     assert!(
                         off > lastoff,
-                        "wrong order for element {:?} in Append result",
-                        wanted
+                        "{}",
+                        "wrong order for element {wanted:?} in Append result",
                     );
                 }
                 lastoff = Some(off);
@@ -163,7 +163,7 @@ fn partitioner(
         while done.load(Ordering::Relaxed) == 0 {
             if !is_parked {
                 all.shuffle(&mut rng);
-                let offset = rng.gen_range(0, cfg.n);
+                let offset = rng.gen_range(0..cfg.n);
                 cfg.partition(&all[..offset], &all[offset..]);
                 sleep = Some(delay(rng.gen::<u64>()));
             }
@@ -215,7 +215,7 @@ fn generic_test(
     } else {
         title += "one client";
     }
-    title = format!("{} ({})", title, part); // 3A or 3B
+    title = format!("{title} ({part})"); // 3A or 3B
 
     const NSERVERS: usize = 5;
     let cfg = Arc::new(Config::new(NSERVERS, unreliable, maxraftstate));
@@ -252,11 +252,11 @@ fn generic_test(
                         let mut j = 0;
                         let mut rng = rand::thread_rng();
                         let mut last = String::new();
-                        let key = format!("{}", cli);
+                        let key = format!("{cli}");
                         put(&cfg1, myck, &key, &last);
                         while done_clients1.load(Ordering::Relaxed) == 0 {
                             if (rng.gen::<u32>() % 1000) < 500 {
-                                let nv = format!("x {} {} y", cli, j);
+                                let nv = format!("x {cli} {j} y");
                                 debug!("{}: client new append {}", cli, nv);
                                 last = next_value(last, &nv);
                                 append(&cfg1, myck, &key, &nv);
@@ -333,7 +333,7 @@ fn generic_test(
                     i, j
                 );
             }
-            let key = format!("{}", i);
+            let key = format!("{i}");
             debug!("Check {:?} for client {}", j, i);
             let v = get(&cfg, &ck, &key);
             check_clnt_appends(i, v, j);
@@ -386,7 +386,7 @@ fn generic_test_linearizability(
     } else {
         title += "one client";
     }
-    title = format!("{}, linearizability checks ({})", title, part); // 3A or 3B
+    title = format!("{title}, linearizability checks ({part})"); // 3A or 3B
 
     let cfg = Arc::new(Config::new(nservers, unreliable, maxraftstate));
 
@@ -425,7 +425,7 @@ fn generic_test_linearizability(
                     let mut rng = rand::thread_rng();
                     while done_clients1.load(Ordering::Relaxed) == 0 {
                         let key = format!("{}", rng.gen::<usize>() % nclients);
-                        let nv = format!("x {} {} y", cli, j);
+                        let nv = format!("x {cli} {j} y");
 
                         let start = begin.elapsed().as_nanos() as i64;
                         let (inp, out) = if rng.gen::<usize>() % 1000 < 500 {
@@ -594,7 +594,7 @@ fn test_unreliable_one_key_3a() {
             let cfg1 = cfg_.clone();
             move |me, myck| {
                 for n in 0..upto {
-                    append(&cfg1, myck, "k", &format!("x {} {} y", me, n));
+                    append(&cfg1, myck, "k", &format!("x {me} {n} y"));
                 }
             }
         })
@@ -805,7 +805,7 @@ fn test_snapshot_rpc_3b() {
     {
         let ck1 = cfg.make_client(&[0, 1]);
         for i in 0..50 {
-            put(&cfg, &ck1, &format!("{}", i), &format!("{}", i));
+            put(&cfg, &ck1, &format!("{i}"), &format!("{i}"));
         }
         thread::sleep(RAFT_ELECTION_TIMEOUT);
         put(&cfg, &ck1, "b", "B");

@@ -16,16 +16,16 @@ async-trait = "0.1"
 futures = "0.3"
 futures-timer = "3.0"
 log = "0.4"
-prost = "0.6"
-prost-derive = "0.6"
-rand = "0.7"
+prost = "0.11.8"
+prost-derive = "0.11.8"
+rand = "0.8.5"
 
 labcodec = { path = "../labcodec" }
 labrpc = { path = "../labrpc" }
 linearizability = { path = "../linearizability"}
 
 [dev-dependencies]
-env_logger = "0.7"
+env_logger = "0.10.0"
 
 [build-dependencies]
-prost-build = "0.6"
+prost-build = "0.11.8"

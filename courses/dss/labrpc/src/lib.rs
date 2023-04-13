@@ -249,7 +249,7 @@ pub mod tests {
 
         for i in 0..=16 {
             let reply = block_on(async { client.handler2(&JunkArgs { x: i }).await.unwrap() });
-            assert_eq!(reply.x, format!("handler2-{}", i));
+            assert_eq!(reply.x, format!("handler2-{i}"));
         }
 
         assert_eq!(net.count("test_server"), 17);
@@ -275,7 +275,7 @@ pub mod tests {
 
             pool.spawn_ok(async move {
                 let mut n = 0;
-                let client_name = format!("client-{}", i);
+                let client_name = format!("client-{i}");
                 let client = JunkClient::new(net.create_client(client_name.clone()));
                 net.enable(&client_name, true);
                 net.connect(&client_name, &server_name);
@@ -283,7 +283,7 @@ pub mod tests {
                 for j in 0..nrpcs {
                     let x = (i * 100 + j) as i64;
                     let reply = client.handler2(&JunkArgs { x }).await.unwrap();
-                    assert_eq!(reply.x, format!("handler2-{}", x));
+                    assert_eq!(reply.x, format!("handler2-{x}"));
                     n += 1;
                 }
 
@@ -318,14 +318,14 @@ pub mod tests {
             let net = net.clone();
 
             pool.spawn_ok(async move {
-                let client_name = format!("client-{}", i);
+                let client_name = format!("client-{i}");
                 let client = JunkClient::new(net.create_client(client_name.clone()));
                 net.enable(&client_name, true);
                 net.connect(&client_name, &server_name);
 
                 let x = i * 100;
                 if let Ok(reply) = client.handler2(&JunkArgs { x }).await {
-                    assert_eq!(reply.x, format!("handler2-{}", x));
+                    assert_eq!(reply.x, format!("handler2-{x}"));
                     n += 1;
                 }
                 sender.send(n).unwrap();
@@ -337,9 +337,8 @@ pub mod tests {
         }
         assert!(
             !(total == nclients as _ || total == 0),
-            "all RPCs succeeded despite unreliable total {}, nclients {}",
-            total,
-            nclients
+            "{}",
+            "all RPCs succeeded despite unreliable total {total}, nclients {nclients}",
         );
     }
 
@@ -356,7 +355,7 @@ pub mod tests {
         let nrpcs = 20;
         for i in 0..20 {
             let sender = tx.clone();
-            let client_name = format!("client-{}", i);
+            let client_name = format!("client-{i}");
             let client = JunkClient::new(net.create_client(client_name.clone()));
             net.enable(&client_name, true);
             net.connect(&client_name, server_name);
@@ -365,7 +364,7 @@ pub mod tests {
                 let mut n = 0;
                 let x = i + 100;
                 let reply = client.handler2(&JunkArgs { x }).await.unwrap();
-                assert_eq!(reply.x, format!("handler2-{}", x));
+                assert_eq!(reply.x, format!("handler2-{x}"));
                 n += 1;
                 sender.send(n).unwrap()
             });
@@ -377,8 +376,7 @@ pub mod tests {
         }
         assert_eq!(
             total, nrpcs,
-            "wrong number of RPCs completed, got {}, expected {}",
-            total, nrpcs
+            "wrong number of RPCs completed, got {total}, expected {nrpcs}"
         );
 
         assert_eq!(
@@ -388,7 +386,7 @@ pub mod tests {
         );
 
         let n = net.count(server.name());
-        assert_eq!(n, total, "wrong count() {}, expected {}", n, total);
+        assert_eq!(n, total, "wrong count() {n}, expected {total}");
     }
 
     // regression: an RPC that's delayed during Enabled=false
@@ -417,7 +415,8 @@ pub mod tests {
             pool.spawn_ok(async move {
                 let x = i + 100;
                 // this call ought to return false.
-                let _ = cli.handler2(&JunkArgs { x });
+                let handle = cli.handler2(&JunkArgs { x });
+                std::mem::drop(handle);
                 sender.send(true).unwrap();
             });
         }
@@ -430,12 +429,12 @@ pub mod tests {
         net.enable(client_name, true);
         let x = 99;
         let reply = block_on(async { client.handler2(&JunkArgs { x }).await.unwrap() });
-        assert_eq!(reply.x, format!("handler2-{}", x));
+        assert_eq!(reply.x, format!("handler2-{x}"));
         let dur = t0.elapsed();
         assert!(
             dur < Duration::from_millis(30),
-            "RPC took too long ({:?}) after Enable",
-            dur
+            "{}",
+            "RPC took too long ({dur:?}) after Enable"
         );
 
         for _ in 0..nrpcs {
@@ -443,14 +442,10 @@ pub mod tests {
         }
 
         let len = junk_server.inner.lock().unwrap().log2.len();
-        assert_eq!(
-            len, 1,
-            "wrong number ({}) of RPCs delivered, expected 1",
-            len
-        );
+        assert_eq!(len, 1, "wrong number ({len}) of RPCs delivered, expected 1");
 
         let n = net.count(server.name());
-        assert_eq!(n, 1, "wrong count() {}, expected 1", n);
+        assert_eq!(n, 1, "wrong count() {n}, expected 1");
     }
 
     // if an RPC is stuck in a server, and the server
@@ -520,7 +515,7 @@ pub mod tests {
 
         let i = 100;
         let reply = block_on(async { client.handler2(&JunkArgs { x: i }).await.unwrap() });
-        assert_eq!(reply.x, format!("handler2-{}", i));
+        assert_eq!(reply.x, format!("handler2-{i}"));
         hook.drop_req.store(true, Ordering::Relaxed);
         assert_eq!(
             block_on(async { client.handler2(&JunkArgs { x: i }).await.unwrap_err() }),
@@ -534,6 +529,6 @@ pub mod tests {
         );
         hook.drop_resp.store(false, Ordering::Relaxed);
         block_on(async { client.handler2(&JunkArgs { x: i }).await.unwrap() });
-        assert_eq!(reply.x, format!("handler2-{}", i));
+        assert_eq!(reply.x, format!("handler2-{i}"));
     }
 }

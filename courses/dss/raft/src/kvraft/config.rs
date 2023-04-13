@@ -169,7 +169,7 @@ impl Config {
     pub fn connect_all(&self) {
         let servers = self.servers.lock().unwrap();
         for i in 0..self.n {
-            self.connect(i, &self.all(), &*servers);
+            self.connect(i, &self.all(), &servers);
         }
     }
 
@@ -178,12 +178,12 @@ impl Config {
         debug!("partition servers into: {:?} {:?}", p1, p2);
         let servers = self.servers.lock().unwrap();
         for i in p1 {
-            self.disconnect(*i, p2, &*servers);
-            self.connect(*i, p1, &*servers);
+            self.disconnect(*i, p2, &servers);
+            self.connect(*i, p1, &servers);
         }
         for i in p2 {
-            self.disconnect(*i, p1, &*servers);
-            self.connect(*i, p2, &*servers);
+            self.disconnect(*i, p1, &servers);
+            self.connect(*i, p2, &servers);
         }
     }
 
@@ -199,7 +199,7 @@ impl Config {
             endnames.push(name.clone());
             let cli = self.net.create_client(name.clone());
             ends.push(KvClient::new(cli));
-            self.net.connect(&name, &format!("{}", j));
+            self.net.connect(&name, &format!("{j}"));
         }
 
         ends.shuffle(&mut rand::thread_rng());
@@ -232,7 +232,7 @@ impl Config {
     /// Shutdown a server by isolating it
     pub fn shutdown_server(&self, i: usize) {
         let mut servers = self.servers.lock().unwrap();
-        self.disconnect(i, &self.all(), &*servers);
+        self.disconnect(i, &self.all(), &servers);
 
         // disable client connections to the server.
         // it's important to do this before creating
@@ -240,7 +240,7 @@ impl Config {
         // the possibility of the server returning a
         // positive reply to an Append but persisting
         // the result in the superseded Persister.
-        self.net.delete_server(&format!("{}", i));
+        self.net.delete_server(&format!("{i}"));
 
         // a fresh persister, in case old instance
         // continues to update the Persister.
@@ -267,7 +267,7 @@ impl Config {
         for (j, name) in servers.endnames[i].iter().enumerate() {
             let cli = self.net.create_client(name.clone());
             ends.push(RaftClient::new(cli));
-            self.net.connect(name, &format!("{}", j));
+            self.net.connect(name, &format!("{j}"));
         }
 
         // a fresh persister, so old instance doesn't overwrite
@@ -285,7 +285,7 @@ impl Config {
         let kv_node = server::Node::new(kv);
         servers.kvservers[i] = Some(kv_node.clone());
 
-        let mut builder = labrpc::ServerBuilder::new(format!("{}", i));
+        let mut builder = labrpc::ServerBuilder::new(format!("{i}"));
         add_raft_service(rf_node, &mut builder).unwrap();
         add_kv_service(kv_node, &mut builder).unwrap();
         let srv = builder.build();
